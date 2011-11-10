@@ -1,6 +1,3 @@
-#include <GL/glfw.h>
-#include <GL/glext.h>
-
 //Must be power of two.
 #define TEXTURE_HEIGHT 512
 #define TEXTURE_WIDTH 512
@@ -34,6 +31,9 @@ typedef struct {
 	GLubyte green;
 	GLubyte blue;
 } Color;
+
+//Play error "ding".
+void play_error_sound(void);
 
 //Functions to directly work with textures (bitmaps).
 

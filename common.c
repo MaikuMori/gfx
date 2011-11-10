@@ -1,6 +1,18 @@
-#include "common.h"
 #include <assert.h>
+#include <string.h>
 #include <stdlib.h>
+#include <windows.h>
+#include <mmsystem.h>
+
+#include <GL/glfw.h>
+#include <GL/glext.h>
+
+#include "common.h"
+
+void play_error_sound(void)
+{
+	PlaySound((LPCTSTR) SND_ALIAS_SYSTEMEXCLAMATION, NULL, SND_ALIAS_ID | SND_ASYNC);
+}
 
 void bitmap_init(GLuint ** data)
 {
@@ -11,6 +23,7 @@ void bitmap_init(GLuint ** data)
 void bitmap_fill(GLuint ** data, GLubyte red, GLubyte green, GLubyte blue)
 {
 	GLint i;
+
 	for (i = 0; i < TEXTURE_WIDTH * TEXTURE_HEIGHT; i++) {
 		(*data)[i] = ((red << 24) | (green << 16) | (blue << 8) | (255 << 0));
 	}

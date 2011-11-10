@@ -13,19 +13,21 @@
 //Uncomment to compile in Debug if you do not have Visual Leak Detector installed.
 //I didn't include the lib in project settings so it's easier to disable it.
 #if _DEBUG
-	#pragma comment(lib,"C:\\Program Files (x86)\\Visual Leak Detector\\lib\\Win32\\vld.lib")
-	#include "C:\\Program Files (x86)\\Visual Leak Detector\\include\\vld.h"
+	//Found a bug in Visual Leak Detector which prevents to open windows dialogs
+	//while Visual Leak Detector is active. Disabling until the patch the problem.
+	//#pragma comment(lib,"C:\\Program Files (x86)\\Visual Leak Detector\\lib\\Win32\\vld.lib")
+	//#include "C:\\Program Files (x86)\\Visual Leak Detector\\include\\vld.h"
 #endif
 
 int main(void)
 {
 	GLbyte running = GL_TRUE, hw_initialized = GL_FALSE;
-	GLubyte c = 0, hw_id;
+	GLubyte hw_id;
 	GLint i;
 
-	void (* hw_init)() = NULL;
-	void (* hw_draw)() = NULL;
-	void (* hw_terminate)() = NULL;
+	void (* hw_init)(void) = NULL;
+	void (* hw_draw)(void) = NULL;
+	void (* hw_terminate)(void) = NULL;
 
 	//Init GLFW
 	if (!glfwInit()) {
@@ -41,6 +43,7 @@ int main(void)
 	glfwSetWindowPos(100, 100);
 	MoveWindow(GetConsoleWindow(), 95, 100+TEXTURE_HEIGHT+35, 800, 400, TRUE);
 
+	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 
 	//Init OpenGL.
 	glMatrixMode(GL_PROJECTION);

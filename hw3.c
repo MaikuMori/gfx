@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <windows.h>
-#include <mmsystem.h>
 
 #include <GL/glfw.h>
 
@@ -25,7 +23,7 @@ static void add_point(GLint x, GLint y)
 	points++;
 }
 
-static void delete_polygon()
+static void delete_polygon(void)
 {
 	GLint i;
 	for (i = 0; i < MAX_CORNERS; i++) {
@@ -37,7 +35,7 @@ static void delete_polygon()
 	points = 0;
 }
 
-static void fill_poligon()
+static void fill_poligon(void)
 {
 	GLint y_line, node_count, nodes[MAX_CORNERS], i, j;
 
@@ -104,7 +102,7 @@ static void GLFWCALL click_handler(GLint button, GLint action)
 		//If left click, add point to the polygon.
 		if (button == 0) {
 			if (points >= MAX_CORNERS && building) {
-				PlaySound((LPCTSTR) SND_ALIAS_SYSTEMEXCLAMATION, NULL, SND_ALIAS_ID | SND_ASYNC);
+				play_error_sound();
 				printf("Error: Trying to make larger polygon than currently supported. Current max point count is: %d\n", MAX_CORNERS);
 			}
 
@@ -139,7 +137,7 @@ static void GLFWCALL click_handler(GLint button, GLint action)
 	bitmap_update(&texture_data[0], textures[0]);
 }
 
-void hw3_init()
+void hw3_init(void)
 {
 	printf("Initializing homework 3 ...\t");
 
@@ -158,7 +156,7 @@ void hw3_init()
 	printf("DONE!\n");
 }
 
-void hw3_draw()
+void hw3_draw(void)
 {
 	//Draw quad and texture it using our bitmap.
 	glEnable(GL_TEXTURE_2D);
@@ -178,7 +176,7 @@ void hw3_draw()
 	glDisable(GL_TEXTURE_2D);
 }
 
-void hw3_terminate()
+void hw3_terminate(void)
 {
 	printf("Terminating homework 3 ...\t");
 	//Remove callback and free up memory.
