@@ -17,19 +17,19 @@ GLuint * texture_data[TEXTURE_COUNT];
 
 //Types
 typedef struct {
-	GLint x;
-	GLint y;
+    GLint x;
+    GLint y;
 } Vector2i;
 
 typedef struct {
-	GLfloat x;
-	GLfloat y;
+    GLfloat x;
+    GLfloat y;
 } Vector2f;
 
 typedef struct {
-	GLubyte red;
-	GLubyte green;
-	GLubyte blue;
+    GLubyte red;
+    GLubyte green;
+    GLubyte blue;
 } Color;
 
 //Play error "ding".
