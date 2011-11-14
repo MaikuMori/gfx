@@ -146,7 +146,7 @@ void hw3_init(void)
     building = GL_FALSE;
 
     glfwSetWindowTitle("GFX Homework: 3.d");
-    //Attack our click handler.
+    //Attach our click handler.
     glfwSetMouseButtonCallback(click_handler);
 
     //Color it white.

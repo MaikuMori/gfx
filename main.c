@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include "hw1.h"
+#include "hw2.h"
 #include "hw3.h"
 
 //Visual Leak Detector (http://vld.codeplex.com/)
@@ -36,7 +37,7 @@ int main(void)
 
     //Init OpenGL context + window.
     glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
-    if (!glfwOpenWindow(TEXTURE_WIDTH, TEXTURE_HEIGHT, 8, 8, 8, 0, 0, 0, GLFW_WINDOW)) {
+    if (!glfwOpenWindow(TEXTURE_WIDTH, TEXTURE_HEIGHT, 8, 8, 8, 8, 8, 8, GLFW_WINDOW)) {
         glfwTerminate();
         return EXIT_FAILURE;
     }
@@ -99,9 +100,17 @@ int main(void)
                 hw_init = hw1_init;
                 hw_draw = hw1_draw;
                 hw_terminate = hw1_terminate;
-            }
+            } if (glfwGetKey('2') && hw_id != 2) {
+                if (hw_initialized) {
+                    hw_terminate();
+                    hw_initialized = GL_FALSE;
+                }
 
-            if (glfwGetKey('3') && hw_id != 3) {
+                hw_id = 2;
+                hw_init = hw2_init;
+                hw_draw = hw2_draw;
+                hw_terminate = hw2_terminate;
+            } else if (glfwGetKey('3') && hw_id != 3) {
                 if (hw_initialized) {
                     hw_terminate();
                     hw_initialized = GL_FALSE;

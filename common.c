@@ -1,17 +1,94 @@
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <windows.h>
 #include <mmsystem.h>
 
+#include <GL/glew.h>
 #include <GL/glfw.h>
 #include <GL/glext.h>
 
 #include "common.h"
 
+char* read_file(char *file)
+{
+    FILE *f;
+    long length;
+    char *buf;
+
+    f = fopen(file, "r"); 
+    if (!f) 
+        return NULL;
+
+    fseek(f, 0, SEEK_END); 
+    length = ftell(f);
+    buf = (char *) malloc(length+1);
+    fseek(f, 0, SEEK_SET); 
+    fread(buf, length, 1, f); 
+    fclose(f);
+    buf[length] = 0;
+
+    return buf;
+}
+
 void play_error_sound(void)
 {
     PlaySound((LPCTSTR) SND_ALIAS_SYSTEMEXCLAMATION, NULL, SND_ALIAS_ID | SND_ASYNC);
+}
+
+ShaderProgram * load_shaders(char * vert, char * frag)
+{
+    ShaderProgram * prog;        
+    
+    char * vs, * fs;
+    const char * vv, * ff;
+
+    vs = read_file(vert);
+    fs = read_file(frag);
+
+    if (vs == NULL || fs == NULL) {
+        return NULL;
+    }
+
+    prog = (ShaderProgram *) malloc(sizeof(ShaderProgram));
+
+    prog->vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+    prog->fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    vv = vs;
+    ff = fs;
+
+    glShaderSource(prog->vertex_shader, 1, &vv,NULL);
+    glShaderSource(prog->fragment_shader, 1, &ff,NULL);
+
+    free(vs);
+    free(fs);
+
+    glCompileShader(prog->vertex_shader);
+    glCompileShader(prog->fragment_shader);
+
+    prog->program = glCreateProgram();
+
+    glAttachShader(prog->program, prog->vertex_shader);
+    glAttachShader(prog->program, prog->fragment_shader);
+
+    glLinkProgram(prog->program);
+
+    return prog;
+}
+
+void unload_shaders(ShaderProgram * prog)
+{
+    glDetachShader(prog->program, prog->vertex_shader);
+    glDetachShader(prog->program, prog->fragment_shader);
+
+    glDeleteShader(prog->vertex_shader);
+    glDeleteShader(prog->fragment_shader);
+
+    glDeleteProgram(prog->fragment_shader);
+
+    free(prog);
 }
 
 void bitmap_init(GLuint ** data)

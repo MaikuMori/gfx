@@ -32,8 +32,22 @@ typedef struct {
     GLubyte blue;
 } Color;
 
+typedef struct {
+    GLuint program;
+    GLuint vertex_shader;
+    GLuint fragment_shader;
+} ShaderProgram;
+
+//Misc functions.
+
+//Read a file into char array.
+char* read_file(char *file);
 //Play error "ding".
 void play_error_sound(void);
+
+//Shader functions.
+ShaderProgram * load_shaders(char * vert, char * frag);
+void unload_shaders(ShaderProgram * prog);
 
 //Functions to directly work with textures (bitmaps).
 
