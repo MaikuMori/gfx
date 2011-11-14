@@ -17,7 +17,7 @@ char* read_file(char *file)
     long length;
     char *buf;
 
-    f = fopen(file, "r"); 
+    f = fopen(file, "rb"); 
     if (!f) 
         return NULL;
 
@@ -47,7 +47,7 @@ ShaderProgram * load_shaders(char * vert, char * frag)
     vs = read_file(vert);
     fs = read_file(frag);
 
-    if (vs == NULL || fs == NULL) {
+    if ((vs == NULL) || (fs == NULL)) {
         return NULL;
     }
 

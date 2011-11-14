@@ -28,6 +28,8 @@ GLboolean mouse_button[2];
 Vector2i mouse_position;
 Vector2f camera_position;
 
+GLboolean init_done = GL_FALSE;
+
 GLuint voxelVBO;
 #pragma region VoxelData
 //Cube data.
@@ -224,14 +226,16 @@ void hw2_init(void)
             glew_initialized = GL_TRUE;
         } else {
             play_error_sound();
-            printf("ERROR: Failed to initialize glew.");
+            printf("FAILED!\nERROR: Failed to initialize glew.\n");
+            return;
         }
     }
 
     //Check for OpenGL 2.1+
     if(!GLEW_VERSION_2_1) {
         play_error_sound();
-        printf("Error: OpenGL 2.1+ required.");
+        printf("FAILED!\nError: OpenGL 2.1+ required.\n");
+        return;
     }
 
     //Setup OpenGL.
@@ -268,9 +272,17 @@ void hw2_init(void)
     //phong = load_shaders("Shaders/phong.vert", "Shaders/phong.frag");
     simple_color = load_shaders("Shaders/color.vert", "Shaders/color.frag");
 
+    if(simple_color == NULL) {
+        play_error_sound();
+        printf("FAILED!\nError: Failed to load shaders.\n");
+        return;
+    }
+
     glUseProgram(simple_color->program);
     //Get the obj_color variable location in color_picker shader.
     obj_color_location = glGetUniformLocation(simple_color->program, "obj_color");
+
+    init_done = GL_TRUE;
     
     printf("DONE!\n");
 
@@ -279,6 +291,10 @@ void hw2_init(void)
 
 void hw2_draw(void)
 {
+    //If something failed there's no point even attempting to render anything.
+    if(!init_done)
+        return;
+
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 
@@ -300,10 +316,11 @@ void hw2_terminate(void)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    //unload_shaders(phong);
-    unload_shaders(simple_color);
-
-    glUseProgram(0);
+    if (init_done) {
+        //unload_shaders(phong);
+        unload_shaders(simple_color); 
+        glUseProgram(0);
+    }
 
     //Reset matrices.
     glMatrixMode(GL_PROJECTION);
