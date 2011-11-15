@@ -137,23 +137,49 @@ static void GLFWCALL click_handler(GLint button, GLint action)
     bitmap_update(&texture_data[0], textures[0]);
 }
 
+static void print_help(void) 
+{
+    printf("\nHelp:\n");
+    printf(" Left click to start drawing polygon. Each left click adds a point.\n");
+    printf(" Right click to finish drawing polygon and fill it.\n");
+    printf(" It will automatically connect first and last point.\n");
+}
+
 void hw3_init(void)
 {
-    printf("Initializing homework 3 ...\t");
+    printf("\nInitializing homework 3 ...\n");
 
     //Initialize defaults.
     points = 0;
     building = GL_FALSE;
 
     glfwSetWindowTitle("GFX Homework: 3.d");
+
     //Attach our click handler.
     glfwSetMouseButtonCallback(click_handler);
 
-    //Color it white.
+    //Change the window size and OpenGL viewport.
+    glfwSetWindowSize(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    glViewport(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    //Reset projection matrix.
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    //Set up orthographic projection.
+    glOrtho(0, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, -1, 1);
+    //Reset model view matrix.
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //Enable textures globally since we're just drawing textured quad.
+    glEnable(GL_TEXTURE_2D);
+
+
+    //Color the texture white.
     bitmap_fill(&texture_data[0], 255, 255, 255);
     bitmap_upload(&texture_data[0], textures[0]);
 
     printf("DONE!\n");
+
+    print_help();
 }
 
 void hw3_draw(void)
@@ -178,9 +204,10 @@ void hw3_draw(void)
 
 void hw3_terminate(void)
 {
-    printf("Terminating homework 3 ...\t");
+    //Restore OpenGL settings.
+    glDisable(GL_TEXTURE_2D);
+
     //Remove callback and free up memory.
     glfwSetMouseButtonCallback(NULL);
     delete_polygon();
-    printf("DONE!\n");
 }

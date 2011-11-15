@@ -42,8 +42,10 @@ typedef struct {
 
 //Read a file into char array.
 char* read_file(char *file);
-//Play error "ding".
+
+//Feedback functions.
 void play_error_sound(void);
+void error( const char* format, ... );
 
 //Shader functions.
 ShaderProgram * load_shaders(char * vert, char * frag);

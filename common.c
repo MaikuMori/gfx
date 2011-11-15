@@ -37,6 +37,16 @@ void play_error_sound(void)
     PlaySound((LPCTSTR) SND_ALIAS_SYSTEMEXCLAMATION, NULL, SND_ALIAS_ID | SND_ASYNC);
 }
 
+void error( const char* format, ... ) {
+    va_list args;
+    play_error_sound();
+    printf("Error: ");
+    va_start(args, format);
+    vprintf(format, args);
+    va_end( args );
+    fprintf( stderr, "\n" );
+}
+
 ShaderProgram * load_shaders(char * vert, char * frag)
 {
     ShaderProgram * prog;        

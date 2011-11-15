@@ -20,12 +20,12 @@
 #define HISTOGRAM_LUMINANACE    0x00000008
 #define HISTOGRAM_RGB (HISTOGRAM_RED | HISTOGRAM_GREEN | HISTOGRAM_BLUE)
 
-GLubyte * image_data;
-GLuint  * histogram_data;
+static GLubyte * image_data;
+static GLuint  * histogram_data;
 
-GLenum current_histogram;
+static GLenum current_histogram;
 
-GLboolean opening_file;
+static GLboolean opening_file;
 
 static GLboolean load_image(char * filename)
 {
@@ -47,7 +47,7 @@ static GLboolean load_image(char * filename)
     if (x != TEXTURE_WIDTH || y !=TEXTURE_HEIGHT)
     {
         play_error_sound();
-        printf("Error: Image should be %dpxx%dpx. Scaling isn't currently supported.\n", TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        printf("Error: Image should be %dpx x %dpx. Scaling isn't currently supported.\n", TEXTURE_WIDTH, TEXTURE_HEIGHT);
         return GL_FALSE;
     }
 
@@ -137,7 +137,7 @@ static void open_file(void)
     ofn.lpstrFile[0] = '\0';
     ofn.nMaxFile = MAX_PATH;
     ofn.lpstrFilter = TEXT("Images (*.jpg;*.png;*.bmp;*.tga;*.psd)\0*.jpg;*.png;*.bmp;*.tga;*.psd\0");
-    ofn.lpstrInitialDir = NULL;
+    ofn.lpstrInitialDir = TEXT("Images");
     ofn.lpstrTitle = TEXT("Open 512x512 image ...");
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
@@ -200,16 +200,29 @@ static void GLFWCALL key_handler(int key, int action)
             draw_histogram(HISTOGRAM_LUMINANACE);
         }
         break;
-    case 'O':
+    case 'L':
         if(!opening_file)
             open_file();
         break;
     }
 }
 
+static void print_help(void)
+{
+    printf("\nHelp:\n");
+    printf(" Press 'L' to load custom image. It must be %dpx x %dpx in size.\n", TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    printf(" There are some example images included.\n\n");
+    printf(" Use keys [Q-T] to toggle between different histograms.\n");
+    printf(" \t'Q' - RGB histogram\n");
+    printf(" \t'W' - Red channel histogram\n");
+    printf(" \t'E' - Green channel histogram\n");
+    printf(" \t'R' - Blue channel histogram\n");
+    printf(" \t'T' - Luminance (perceived) histogram\n");
+}
+
 void hw1_init(void)
 {
-    printf("Initializing homework 1 ...\t");
+    printf("\nInitializing homework 1 ...\n");
 
     //Set defaults.
     image_data = NULL;
@@ -223,7 +236,7 @@ void hw1_init(void)
     bitmap_upload(&texture_data[2], textures[2]);
 
     //Load the test image.
-    if (load_image("test.png")) {
+    if (load_image("Images/test.png")) {
         current_histogram = HISTOGRAM_RGB;
         draw_histogram(HISTOGRAM_RGB);
     }
@@ -234,17 +247,25 @@ void hw1_init(void)
     //Change the window size and OpenGL viewport.
     glfwSetWindowSize(TEXTURE_WIDTH * 2 + BORDER, TEXTURE_HEIGHT);
     glViewport(0, 0, TEXTURE_WIDTH * 2 + BORDER, TEXTURE_HEIGHT);
+    //Reset projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    //Set up orthographic projection.
     glOrtho(0, TEXTURE_WIDTH * 2 + BORDER, TEXTURE_HEIGHT, 0, -1, 1);
+    //Reset model view matrix.
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    //Enable textures globally since we're just drawing two textured quads.
+    glEnable(GL_TEXTURE_2D);
 
     printf("DONE!\n");
+
+    print_help();
 }
 
 void hw1_draw(void)
 {
     //Draw quads and texture them using our bitmaps.
-    glEnable(GL_TEXTURE_2D);
 
     //The picture.
     glBindTexture(GL_TEXTURE_2D, textures[1]);
@@ -271,23 +292,15 @@ void hw1_draw(void)
     glTexCoord2i(1, 0);
     glVertex3f(TEXTURE_WIDTH * 2 + BORDER, 0, 0);
     glEnd();
-
-    glDisable(GL_TEXTURE_2D);
 }
 
 void hw1_terminate(void)
 {
-    printf("Terminating homework 1 ...\t");
-
     //Remove key handler.
     glfwSetKeyCallback(NULL);
 
-    //Restore the initial size and view port.
-    glfwSetWindowSize(TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    glViewport(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, -1, 1);
+    //Restore OpenGL settings.
+    glDisable(GL_TEXTURE_2D);
 
     //Free memory.
     if (image_data != NULL)
@@ -295,6 +308,4 @@ void hw1_terminate(void)
 
     if (histogram_data != NULL)
         free(histogram_data);
-
-    printf("DONE!\n");
 }

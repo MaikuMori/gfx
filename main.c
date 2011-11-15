@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#include <GL/glew.h>
 #include <GL/glfw.h>
 #include <GL/glext.h>
 
@@ -30,47 +31,44 @@ int main(void)
     void (* hw_draw)(void) = NULL;
     void (* hw_terminate)(void) = NULL;
 
-    //Init GLFW
+    //Initialize GLFW.
     if (!glfwInit()) {
+        error("Failed to initialize GLFW.");
         return EXIT_FAILURE;
     };
 
-    //Init OpenGL context + window.
+    //Initialize OpenGL context + window.
     glfwOpenWindowHint(GLFW_WINDOW_NO_RESIZE, GL_TRUE);
     if (!glfwOpenWindow(TEXTURE_WIDTH, TEXTURE_HEIGHT, 8, 8, 8, 8, 8, 8, GLFW_WINDOW)) {
         glfwTerminate();
+        error("Failed to initialize OpenGL context.");
         return EXIT_FAILURE;
     }
+
+    //Initialize GLEW. (Helps checking for and loading OpenGL extensions).
+    if (glewInit() != GLEW_OK) {
+        error("Failed to initialize GLEW.");
+        return EXIT_FAILURE;
+    }
+
+    //Set the initial window position.
     glfwSetWindowPos(100, 100);
     MoveWindow(GetConsoleWindow(), 95, 100+TEXTURE_HEIGHT+35, 800, 400, TRUE);
 
+    //Print OpenGL driver version.
     printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 
-    //Init OpenGL.
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    glDisable(GL_DEPTH_TEST);
-
-    //Init textures.
-    printf("Init textures ...\t");
-
+    //Initialize textures.
     glGenTextures(TEXTURE_COUNT, &textures[0]);
     for (i = 0; i < TEXTURE_COUNT; i++) {
         bitmap_init(&texture_data[i]);
     }
-
-    printf("DONE!\n");
 
     //Start off with homework 1.
     hw_id = 1;
     hw_init = hw1_init;
     hw_draw = hw1_draw;
     hw_terminate = hw1_terminate;
-
-    printf("Entering main loop:\n");
 
     while(running) {
         glClear(GL_COLOR_BUFFER_BIT);
@@ -127,8 +125,6 @@ int main(void)
         }
     }
 
-    printf("Main loop terminated, freeing stuff ...\t");
-
     //Terminate the current homework.
     if (hw_initialized) {
         hw_terminate();
@@ -140,11 +136,8 @@ int main(void)
     }
     glDeleteTextures(TEXTURE_COUNT, &textures[0]);
 
-    printf("DONE!\n");
-
-    printf("Terminating OpenGL context ...\t");
+    //Terminate OpenGL context.
     glfwTerminate();
-    printf("DONE!\nBye!\n");
 
     return EXIT_SUCCESS;
 }

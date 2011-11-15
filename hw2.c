@@ -23,14 +23,12 @@
 #define VOXEL_COUNT_Z 8
 #define VOXEL_COUNT VOXEL_COUNT_X * VOXEL_COUNT_Y * VOXEL_COUNT_Z
 
-GLboolean glew_initialized = 0;
-GLboolean mouse_button[2];
-Vector2i mouse_position;
-Vector2f camera_position;
+static GLboolean mouse_button[2];
+static Vector2i mouse_position;
+static Vector2f camera_position;
+static GLboolean init_done = GL_FALSE;
 
-GLboolean init_done = GL_FALSE;
-
-GLuint voxelVBO;
+static GLuint voxelVBO;
 #pragma region VoxelData
 //Cube data.
 GLfloat vertices[] = {1,1,1,  -1,1,1,  -1,-1,1,  1,-1,1,      
@@ -56,15 +54,15 @@ GLfloat colors[] = {1,1,1,  1,1,0,  1,0,0,  1,0,1,
     0,0,1,  0,0,0,  0,1,0,  0,1,1};
 #pragma endregion VoxelData
 
-unsigned char voxel_map[VOXEL_COUNT_X][VOXEL_COUNT_Y][VOXEL_COUNT_Z];
+static unsigned char voxel_map[VOXEL_COUNT_X][VOXEL_COUNT_Y][VOXEL_COUNT_Z];
 
 //Spacing between the voxels.
-GLfloat voxel_spacing = 1.0;
+static GLfloat voxel_spacing = 1.0;
 
 //Shaders.
-ShaderProgram * simple_color;
-//ShaderProgram * phong;
-GLint obj_color_location;
+static ShaderProgram * simple_color;
+//static ShaderProgram * phong;
+static GLint obj_color_location;
 
 static void move_camera(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat targetX, GLfloat targetY, GLfloat targetZ)
 {
@@ -203,55 +201,59 @@ static void GLFWCALL key_handler(int key, int action)
     }
 }
 
+static void print_help(void)
+{
+    printf("\nHelp:\n");
+    printf(" Left click on voxel to delete it.\n");
+    printf(" Press 'R' to reset the object to it's original cube form.\n");
+    printf(" Use 'Q' and 'W' to decrease or increase the spacing between voxels.\n");
+}
+
 void hw2_init(void)
 {
-    printf("Initializing homework 2 ...\t");
-    glfwSetWindowTitle("GFX Homework: 2.1.a");
+    printf("\nInitializing homework 2 ...\n");
 
-    //Initialize defaults.
+    //Set defaults.
     mouse_button[LEFT_BUTTON] = 0;
     mouse_button[RIGHT_BUTTON] = 0;
     camera_position.x = 25;
     camera_position.y = 45;
     memset(voxel_map, 1, VOXEL_COUNT);
 
+    glfwSetWindowTitle("GFX Homework: 2.1.a");
+
     //Add callbacks.
     glfwSetMouseButtonCallback(mouse_click_handler);
     glfwSetMousePosCallback(mouse_pos_handler);
     glfwSetKeyCallback(key_handler);
 
-    //Initialize glew if needed. (Helps loading OpenGL extensions).
-    if (!glew_initialized) {
-        if (GLEW_OK == glewInit()) {
-            glew_initialized = GL_TRUE;
-        } else {
-            play_error_sound();
-            printf("FAILED!\nERROR: Failed to initialize glew.\n");
-            return;
-        }
-    }
-
     //Check for OpenGL 2.1+
     if(!GLEW_VERSION_2_1) {
-        play_error_sound();
-        printf("FAILED!\nError: OpenGL 2.1+ required.\n");
+        error("OpenGL 2.1+ required to view this homework.");
         return;
     }
 
     //Setup OpenGL.
+    //Change the window size and OpenGL viewport.
+    glfwSetWindowSize(TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    glViewport(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+    //Reset projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
+    //Setup perpective projection.
     gluPerspective(60.0f, (float)(TEXTURE_WIDTH) / TEXTURE_HEIGHT, 1.0f, 1000.0f);
+    //Reset model view matrix.
     glMatrixMode(GL_MODELVIEW);
-
+    glLoadIdentity();
+    //Going to need depth test and we're going to cull faces to improve performance.
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glEnable(GL_CULL_FACE);
-
+    //Slightly adjusting clear colors to work around lazy coding.
     glClearColor(0.01f, 0.01f, 0.01f, 0);
     glClearStencil(0);
     glClearDepth(1.0f);
-    glDepthFunc(GL_LEQUAL);
 
     //Move camera.
     move_camera(0, 0, (GLfloat)(VOXEL_COUNT_Z * voxel_spacing + (VOXEL_COUNT_X * 4.5)), 0, 0, 0);
@@ -273,11 +275,10 @@ void hw2_init(void)
     simple_color = load_shaders("Shaders/color.vert", "Shaders/color.frag");
 
     if(simple_color == NULL) {
-        play_error_sound();
-        printf("FAILED!\nError: Failed to load shaders.\n");
+        error("Failed to load shaders.");
         return;
     }
-
+    //Use color shader which simply colors objects in one color.
     glUseProgram(simple_color->program);
     //Get the obj_color variable location in color_picker shader.
     obj_color_location = glGetUniformLocation(simple_color->program, "obj_color");
@@ -287,6 +288,8 @@ void hw2_init(void)
     printf("DONE!\n");
 
     printf("Using %d voxels!\n", VOXEL_COUNT);
+
+    print_help();
 }
 
 void hw2_draw(void)
@@ -295,24 +298,21 @@ void hw2_draw(void)
     if(!init_done)
         return;
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //Clear depth and stencil buffers.
+    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-
-    glUseProgram(simple_color->program);
     //Render the object.
     draw_object();
 }
 
 void hw2_terminate(void)
 {
-    printf("Terminating homework 2 ...\t");
-
     //Remove callbacks.
     glfwSetMouseButtonCallback(NULL);
     glfwSetMousePosCallback(NULL);
     glfwSetKeyCallback(NULL);
 
-    //Restore OpenGL.
+    //Restore OpenGL settings.
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
@@ -331,6 +331,4 @@ void hw2_terminate(void)
     
     //Delete the VBO.
     glDeleteBuffers(1, &voxelVBO);
-
-    printf("DONE!\n");
 }
