@@ -185,8 +185,6 @@ void hw3_init(void)
 void hw3_draw(void)
 {
     //Draw quad and texture it using our bitmap.
-    glEnable(GL_TEXTURE_2D);
-
     glBindTexture(GL_TEXTURE_2D, textures[0]);
     glBegin(GL_QUADS);
     glTexCoord2i(0, 0);
@@ -198,8 +196,6 @@ void hw3_draw(void)
     glTexCoord2i(1, 0);
     glVertex3f(TEXTURE_WIDTH, 0, 0);
     glEnd();
-
-    glDisable(GL_TEXTURE_2D);
 }
 
 void hw3_terminate(void)

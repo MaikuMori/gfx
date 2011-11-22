@@ -28,10 +28,10 @@ static Vector2i mouse_position;
 static Vector2f camera_position;
 static GLboolean init_done = GL_FALSE;
 
-static GLuint voxelVBO;
+static GLuint voxel_vbo;
 #pragma region VoxelData
 //Cube data.
-GLfloat vertices[] = {1,1,1,  -1,1,1,  -1,-1,1,  1,-1,1,      
+static const GLfloat vertices[] = {1,1,1,  -1,1,1,  -1,-1,1,  1,-1,1,      
     1,1,1,  1,-1,1,  1,-1,-1,  1,1,-1,        
     1,1,1,  1,1,-1,  -1,1,-1,  -1,1,1,        
     -1,1,1,  -1,1,-1,  -1,-1,-1,  -1,-1,1,    
@@ -39,14 +39,14 @@ GLfloat vertices[] = {1,1,1,  -1,1,1,  -1,-1,1,  1,-1,1,
     1,-1,-1,  -1,-1,-1,  -1,1,-1,  1,1,-1};
 //Wrote it with lighting before, but since the color picker map looked so nice
 //I removed the lights, so it theory the next two arrays are worthless, but I'll
-//Just keep them around just in case I need it later.
-GLfloat normals[] = {0,0,1,  0,0,1,  0,0,1,  0,0,1,            
+//Just keep them around just in case I need them later.
+static const GLfloat normals[] = {0,0,1,  0,0,1,  0,0,1,  0,0,1,            
     1,0,0,  1,0,0,  1,0,0, 1,0,0,              
     0,1,0,  0,1,0,  0,1,0, 0,1,0,              
     -1,0,0,  -1,0,0, -1,0,0,  -1,0,0,          
     0,-1,0,  0,-1,0,  0,-1,0,  0,-1,0,         
     0,0,-1,  0,0,-1,  0,0,-1,  0,0,-1};        
-GLfloat colors[] = {1,1,1,  1,1,0,  1,0,0,  1,0,1,            
+static const GLfloat colors[] = {1,1,1,  1,1,0,  1,0,0,  1,0,1,            
     1,1,1,  1,0,1,  0,0,1,  0,1,1,             
     1,1,1,  0,1,1,  0,1,0,  1,1,0,             
     1,1,0,  0,1,0,  0,0,0,  1,0,0,             
@@ -59,9 +59,7 @@ static unsigned char voxel_map[VOXEL_COUNT_X][VOXEL_COUNT_Y][VOXEL_COUNT_Z];
 //Spacing between the voxels.
 static GLfloat voxel_spacing = 1.0;
 
-//Shaders.
 static ShaderProgram * simple_color;
-//static ShaderProgram * phong;
 static GLint obj_color_location;
 
 static void move_camera(GLfloat posX, GLfloat posY, GLfloat posZ, GLfloat targetX, GLfloat targetY, GLfloat targetZ)
@@ -86,11 +84,16 @@ static void draw_object(void)
         (VOXEL_COUNT_Y / 2) * - (2 + voxel_spacing),
         (VOXEL_COUNT_Z / 2) * - (2 + voxel_spacing));
 
-    glBindBuffer(GL_ARRAY_BUFFER, voxelVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, voxel_vbo);
 
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_VERTEX_ARRAY);
+
+    glNormalPointer(GL_FLOAT, 0, (void*)sizeof(vertices));
+    glColorPointer(3, GL_FLOAT, 0, (void*)(sizeof(vertices)+sizeof(normals)));
+    glVertexPointer(3, GL_FLOAT, 0, 0);
+
     //Render the object on the fly.
     for (z=0; z < VOXEL_COUNT_Z; z++) {
         for (y=0; y < VOXEL_COUNT_Y; y++) {
@@ -114,7 +117,7 @@ static void draw_object(void)
         }
         glTranslatef(0, VOXEL_COUNT_Y * -(2 + voxel_spacing), (2 + voxel_spacing));
     }
-    //Don't need to but just to play along.
+
     glDisableClientState(GL_VERTEX_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -240,16 +243,23 @@ void hw2_init(void)
     //Reset projection matrix.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    //Setup perpective projection.
+    //Setup perspective projection.
     gluPerspective(60.0f, (float)(TEXTURE_WIDTH) / TEXTURE_HEIGHT, 1.0f, 1000.0f);
     //Reset model view matrix.
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    //Going to need depth test and we're going to cull faces to improve performance.
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+    //Going to need depth test and we're going to cull faces to improve performance.
     glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);
+    glDepthRange(0.0f, 1.0f);
+
     glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
+
     //Slightly adjusting clear colors to work around lazy coding.
     glClearColor(0.01f, 0.01f, 0.01f, 0);
     glClearStencil(0);
@@ -259,16 +269,12 @@ void hw2_init(void)
     move_camera(0, 0, (GLfloat)(VOXEL_COUNT_Z * voxel_spacing + (VOXEL_COUNT_X * 4.5)), 0, 0, 0);
 
     //Generate the cube VBO.
-    glGenBuffers(1, &voxelVBO);
-    glBindBuffer(GL_ARRAY_BUFFER, voxelVBO);
+    glGenBuffers(1, &voxel_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, voxel_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(normals)+sizeof(colors), 0, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);                             
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(normals), normals);                
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices)+sizeof(normals), sizeof(colors), colors);
-
-    glNormalPointer(GL_FLOAT, 0, (void*)sizeof(vertices));
-    glColorPointer(3, GL_FLOAT, 0, (void*)(sizeof(vertices)+sizeof(normals)));
-    glVertexPointer(3, GL_FLOAT, 0, 0);
 
     //Load shaders.
     //phong = load_shaders("Shaders/phong.vert", "Shaders/phong.frag");
@@ -298,8 +304,8 @@ void hw2_draw(void)
     if(!init_done)
         return;
 
-    //Clear depth and stencil buffers.
-    glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    //Clear depth buffer.
+    glClear(GL_DEPTH_BUFFER_BIT);
 
     //Render the object.
     draw_object();
@@ -316,19 +322,12 @@ void hw2_terminate(void)
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    if (init_done) {
+    if(init_done) {
         //unload_shaders(phong);
         unload_shaders(simple_color); 
         glUseProgram(0);
     }
 
-    //Reset matrices.
-    glMatrixMode(GL_PROJECTION);
-    glLoadIdentity();
-    glOrtho(0, TEXTURE_WIDTH, TEXTURE_HEIGHT, 0, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
-    
     //Delete the VBO.
-    glDeleteBuffers(1, &voxelVBO);
+    glDeleteBuffers(1, &voxel_vbo);
 }

@@ -47,6 +47,40 @@ void error( const char* format, ... ) {
     fprintf( stderr, "\n" );
 }
 
+void print_program_log(GLuint obj)
+{
+    GLint infoLogLength = 0;
+    GLsizei charsWritten  = 0;
+    GLchar *infoLog;
+
+    glGetProgramiv(obj, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    if (infoLogLength > 0)
+    {
+        infoLog = (char *) malloc(infoLogLength);
+        glGetProgramInfoLog(obj, infoLogLength, &charsWritten, infoLog);
+        printf("%s\n",infoLog);
+        free(infoLog);
+    }
+}
+
+void print_shader_log(GLuint obj)
+{
+    GLint infoLogLength = 0;
+    GLsizei charsWritten  = 0;
+    GLchar *infoLog;
+
+    glGetShaderiv(obj, GL_INFO_LOG_LENGTH, &infoLogLength);
+
+    if (infoLogLength > 0)
+    {
+        infoLog = (char *) malloc(infoLogLength);
+        glGetShaderInfoLog(obj, infoLogLength, &charsWritten, infoLog);
+        printf("%s\n",infoLog);
+        free(infoLog);
+    }
+}
+
 ShaderProgram * load_shaders(char * vert, char * frag)
 {
     ShaderProgram * prog;        

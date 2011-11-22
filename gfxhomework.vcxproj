@@ -89,21 +89,27 @@
     <ClCompile Include="common.c" />
     <ClCompile Include="hw1.c" />
     <ClCompile Include="hw2.c" />
+    <ClCompile Include="hw4.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="hw3.c" />
+    <ClCompile Include="my_math.c" />
     <ClCompile Include="stb_image.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="common.h" />
+    <ClInclude Include="hw4.h" />
     <ClInclude Include="hw2.h" />
     <ClInclude Include="hw3.h" />
     <ClInclude Include="hw1.h" />
+    <ClInclude Include="my_math.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\color.frag" />
     <None Include="Shaders\color.vert" />
     <None Include="Shaders\phong.frag" />
     <None Include="Shaders\phong.vert" />
+    <None Include="Shaders\transform.frag" />
+    <None Include="Shaders\transform.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

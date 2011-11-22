@@ -7,9 +7,11 @@
 #include <GL/glext.h>
 
 #include "common.h"
+
 #include "hw1.h"
 #include "hw2.h"
 #include "hw3.h"
+#include "hw4.h"
 
 //Visual Leak Detector (http://vld.codeplex.com/)
 //Uncomment to compile in Debug if you do not have Visual Leak Detector installed.
@@ -20,6 +22,13 @@
 //#pragma comment(lib,"C:\\Program Files (x86)\\Visual Leak Detector\\lib\\Win32\\vld.lib")
 //#include "C:\\Program Files (x86)\\Visual Leak Detector\\include\\vld.h"
 #endif
+
+static void print_help(void)
+{
+    printf("\nHelp:\n");
+    printf(" Use keys to 1 to 4 to switch between homeworks.\n");
+    printf("------\n");
+}
 
 int main(void)
 {
@@ -70,6 +79,8 @@ int main(void)
     hw_draw = hw1_draw;
     hw_terminate = hw1_terminate;
 
+    print_help();
+
     while(running) {
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -98,7 +109,7 @@ int main(void)
                 hw_init = hw1_init;
                 hw_draw = hw1_draw;
                 hw_terminate = hw1_terminate;
-            } if (glfwGetKey('2') && hw_id != 2) {
+            } else if (glfwGetKey('2') && hw_id != 2) {
                 if (hw_initialized) {
                     hw_terminate();
                     hw_initialized = GL_FALSE;
@@ -118,8 +129,17 @@ int main(void)
                 hw_init = hw3_init;
                 hw_draw = hw3_draw;
                 hw_terminate = hw3_terminate;
-            }
+            } else if (glfwGetKey('4') && hw_id != 4) {
+                if (hw_initialized) {
+                    hw_terminate();
+                    hw_initialized = GL_FALSE;
+                }
 
+                hw_id = 4;
+                hw_init = hw4_init;
+                hw_draw = hw4_draw;
+                hw_terminate = hw4_terminate;
+            }
         } else {
             running = GL_FALSE;
         }

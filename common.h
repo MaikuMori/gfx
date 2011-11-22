@@ -1,3 +1,5 @@
+#include "my_math.h"
+
 //Must be power of two.
 #define TEXTURE_HEIGHT 512
 #define TEXTURE_WIDTH 512
@@ -16,16 +18,6 @@ GLuint textures[TEXTURE_COUNT];
 GLuint * texture_data[TEXTURE_COUNT];
 
 //Types
-typedef struct {
-    GLint x;
-    GLint y;
-} Vector2i;
-
-typedef struct {
-    GLfloat x;
-    GLfloat y;
-} Vector2f;
-
 typedef struct {
     GLubyte red;
     GLubyte green;
@@ -46,6 +38,8 @@ char* read_file(char *file);
 //Feedback functions.
 void play_error_sound(void);
 void error( const char* format, ... );
+void print_program_log(GLuint obj);
+void print_shader_log(GLuint obj);
 
 //Shader functions.
 ShaderProgram * load_shaders(char * vert, char * frag);

@@ -26,6 +26,7 @@ static GLuint  * histogram_data;
 static GLenum current_histogram;
 
 static GLboolean opening_file;
+static GLboolean init_done;
 
 static GLboolean load_image(char * filename)
 {
@@ -119,6 +120,7 @@ static void open_file(void)
 {
     OPENFILENAME ofn;
     TCHAR szFile[MAX_PATH];
+    TCHAR cur_dir[FILENAME_MAX];
 
     size_t file_len;
     size_t converted_len = 0;
@@ -128,6 +130,9 @@ static void open_file(void)
 
     szFile[0] = '\0';
     szFile[1] = '\0';
+
+    //Get current working directory.
+    GetCurrentDirectory(sizeof(TCHAR) * FILENAME_MAX, cur_dir);
 
     //Initialize OPENFILENAME
     memset(&ofn, 0, sizeof(ofn));
@@ -158,12 +163,17 @@ static void open_file(void)
             draw_histogram(current_histogram);
         }
     }
-
+    //Set the old working directory.
+    SetCurrentDirectory(cur_dir);
     opening_file = GL_FALSE;
 }
 
 static void GLFWCALL key_handler(int key, int action)
 {
+    if (!init_done) {
+        return;
+    }
+
     //No need to do this for both press and release.
     if (action == GLFW_RELEASE)
         return;
@@ -228,6 +238,7 @@ void hw1_init(void)
     image_data = NULL;
     current_histogram = HISTOGRAM_NONE;
     histogram_data = (GLuint*) calloc(HISTOGRAM_BUCKETS, sizeof(GLuint));
+    init_done = GL_FALSE;
 
     glfwSetWindowTitle("GFX Homework: 1.a");
 
@@ -236,10 +247,11 @@ void hw1_init(void)
     bitmap_upload(&texture_data[2], textures[2]);
 
     //Load the test image.
-    if (load_image("Images/test.png")) {
-        current_histogram = HISTOGRAM_RGB;
-        draw_histogram(HISTOGRAM_RGB);
+    if (!load_image("Images/test.png")) {
+        return;
     }
+    current_histogram = HISTOGRAM_RGB;
+    draw_histogram(HISTOGRAM_RGB);
 
     //Add key callback.
     glfwSetKeyCallback(key_handler);
@@ -259,12 +271,17 @@ void hw1_init(void)
     glEnable(GL_TEXTURE_2D);
 
     printf("DONE!\n");
+    init_done = GL_TRUE;
 
     print_help();
 }
 
 void hw1_draw(void)
 {
+    if (!init_done) {
+        return;
+    }
+
     //Draw quads and texture them using our bitmaps.
 
     //The picture.
