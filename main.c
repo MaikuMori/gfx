@@ -14,6 +14,7 @@
 #include "hw4.h"
 
 #include "hw6.h"
+#include "hw8.h"
 #include "hw9.h"
 
 //Visual Leak Detector (http://vld.codeplex.com/)
@@ -29,7 +30,7 @@
 static void print_help(void)
 {
     printf("\nHelp:\n");
-    printf(" Use keys to [1-4, 6, 9] to switch between homeworks.\n");
+    printf(" Use keys to [1-4, 6, 8-9] to switch between homeworks.\n");
     printf("------\n");
 }
 
@@ -152,6 +153,16 @@ int main(void)
                 hw_init = hw6_init;
                 hw_draw = hw6_draw;
                 hw_terminate = hw6_terminate;
+            } else if (glfwGetKey('8') && hw_id != 8) {
+                if (hw_initialized) {
+                    hw_terminate();
+                    hw_initialized = GL_FALSE;
+                }
+
+                hw_id = 8;
+                hw_init = hw8_init;
+                hw_draw = hw8_draw;
+                hw_terminate = hw8_terminate;
             } else if (glfwGetKey('9') && hw_id != 9) {
                 if (hw_initialized) {
                     hw_terminate();

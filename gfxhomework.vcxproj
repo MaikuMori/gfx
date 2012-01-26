@@ -91,6 +91,7 @@
     <ClCompile Include="hw2.c" />
     <ClCompile Include="hw4.c" />
     <ClCompile Include="hw6.c" />
+    <ClCompile Include="hw8.c" />
     <ClCompile Include="hw9.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="hw3.c" />
@@ -104,6 +105,7 @@
     <ClInclude Include="hw3.h" />
     <ClInclude Include="hw1.h" />
     <ClInclude Include="hw6.h" />
+    <ClInclude Include="hw8.h" />
     <ClInclude Include="hw9.h" />
     <ClInclude Include="my_math.h" />
   </ItemGroup>

@@ -7,72 +7,48 @@
 #include <GL/glext.h>
 #include <stb_image.h>
 
-#include "hw9.h"
+#include "hw8.h"
 #include "common.h"
 
 #define BORDER 5
+
+#define CONSTRAST_STEP 15
+#define CONSTRAST_MIN -255
+#define CONSTRAST_MAX 255
 
 static GLubyte * image_data;
 
 static GLboolean opening_file;
 static GLboolean init_done;
 
-//5x5 Gaussian kernel.
-static GLdouble gaussian_kernel[25] = {
-    1/256.0f,  4/256.0f,  6/256.0f,  4/256.0f, 1/256.0f,
-    4/256.0f, 16/256.0f, 24/256.0f, 16/256.0f, 4/256.0f,
-    6/256.0f, 24/256.0f, 36/256.0f, 24/256.0f, 6/256.0f,
-    4/256.0f, 16/256.0f, 24/256.0f, 16/256.0f, 4/256.0f,
-    1/256.0f,  4/256.0f,  6/256.0f,  4/256.0f, 1/256.0f
-};
-//3x3 Sharpen kernel.
-static GLdouble sharpen_kernel[9] = {
-    0, -1/16.0f, 0,
-    -1/16.0f, 1, -1/16.0f,
-    0, -1/16.0f, 0
-};
+static GLint constrast = 0;
 
-//Very simple convolution implementation (also extreamly slow).
-static void bitmap_apply_kernel(GLuint ** data_out, GLubyte * data_in, GLdouble * kernel, GLbyte rows, GLbyte cols)
-{
-    GLbyte c_x = cols / 2;
-    GLbyte c_y = rows / 2;
-    GLint i, j, m, n, m_i, n_i;
-    GLint x, y;
-    GLdouble sum_r, sum_g, sum_b;
+static void apply_constrast(void) {
+    int i, j, x, y;
+    unsigned char c[3];
 
-    for (i = 0; i < TEXTURE_HEIGHT; ++i) {
-        for (j = 0; j < TEXTURE_WIDTH; ++j) {
-            sum_r = sum_g = sum_b = 0;
-
-            for (m = 0; m < rows; ++m) {
-                m_i = rows - m - 1;
-
-                for (n = 0; n < cols; ++n) {
-                    n_i = cols - n - 1;
-
-                    //Data indexes.
-                    x = j + n + c_x;
-                    y = i + m + c_y;
-
-                    //Check bounds.
-                    if(y >= 0 && y < TEXTURE_HEIGHT && x >= 0 && x < TEXTURE_WIDTH) {
-                        x *= 4;
-                        y *= 4;
-                        sum_r += data_in[TEXTURE_WIDTH * y + x + 0] * kernel[cols * m_i + n_i];
-                        sum_g += data_in[TEXTURE_WIDTH * y + x + 1] * kernel[cols * m_i + n_i];
-                        sum_b += data_in[TEXTURE_WIDTH * y + x + 2] * kernel[cols * m_i + n_i];
-                    }
-                }
-            }
-            bitmap_set_pixel(data_out, j, i,
-                (GLbyte)((double) fabs(sum_r) + 0.5f),
-                (GLbyte)((double) fabs(sum_g) + 0.5f),
-                (GLbyte)((double) fabs(sum_b) + 0.5f)
-            );
+    for (i = 0, x = 0, y = 0; i < TEXTURE_WIDTH * TEXTURE_HEIGHT * 4; i += 4, x++) {
+        if (x == TEXTURE_WIDTH) {
+            y++;
+            x = 0;
         }
+
+        for (j = 0; j < 3; ++j) {
+            if (image_data[i+j] < constrast) {
+                c[j] = 0;
+            } else if (image_data[i+j] > 255 - constrast) {
+                c[j] = 255;
+            } else {
+                c[j] = (unsigned char) ((float)(image_data[i+j] - constrast) / (255.0f - constrast * 2) * 255.0f);
+                //c[j] = (unsigned char) ((image_data[i+j] - 128) * constrast + 128);
+            }
+        }
+
+        bitmap_set_pixel(&texture_data[7], x, y, c[0], c[1], c[2]);
+
     }
 
+    bitmap_update(&texture_data[7], textures[7]);
 }
 
 static GLboolean load_image(char * filename)
@@ -99,7 +75,7 @@ static GLboolean load_image(char * filename)
         return GL_FALSE;
     }
 
-    glBindTexture(GL_TEXTURE_2D, textures[4]);
+    glBindTexture(GL_TEXTURE_2D, textures[6]);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
@@ -159,8 +135,7 @@ static void open_file(void)
         }
 
         if(load_image(converted_filename)) {
-            bitmap_apply_kernel(&texture_data[5], image_data, gaussian_kernel, 5, 5);
-            bitmap_update(&texture_data[5], textures[5]);
+            apply_constrast();
         }
     }
     //Set the old working directory.
@@ -180,12 +155,20 @@ static void GLFWCALL key_handler(int key, int action)
 
     switch (key) {
     case 'Q':
-        bitmap_apply_kernel(&texture_data[5], image_data, gaussian_kernel, 5, 5);
-        bitmap_update(&texture_data[5], textures[5]);
+        if (constrast > CONSTRAST_MIN) {
+            constrast -= CONSTRAST_STEP;
+            apply_constrast();
+        }
         break;
     case 'W':
-        bitmap_apply_kernel(&texture_data[5], image_data, sharpen_kernel, 3, 3);
-        bitmap_update(&texture_data[5], textures[5]);
+        if (constrast < CONSTRAST_MAX) {
+            constrast += CONSTRAST_STEP;
+            apply_constrast();
+        }
+        break;
+    case 'R':
+        constrast = 0;
+        apply_constrast();
         break;
     case 'L':
         if(!opening_file)
@@ -200,27 +183,31 @@ static void print_help(void)
     printf(" Press 'L' to load custom image. It must be %dpx x %dpx in size.\n", TEXTURE_WIDTH, TEXTURE_HEIGHT);
     printf(" There are some example images included.\n\n");
     printf(" Use keys [Q, W, R] to manipulate the image.\n");
-    printf(" \t'Q' - Toggle blured image\n");
-    printf(" \t'W' - Toggle sharpened image\n");
+    printf(" \t'Q' - Decrease contrast\n");
+    printf(" \t'W' - Increase contrast\n");
+    printf(" \t'R' - Reset contrast\n");
 }
 
-void hw9_init(void)
+void hw8_init(void)
 {
-    printf("\nInitializing homework 9 ...\n");
+    printf("\nInitializing homework 8 ...\n");
 
     //Set defaults.
     image_data = NULL;
     init_done = GL_FALSE;
 
-    glfwSetWindowTitle("GFX Homework: 9.a");
+    glfwSetWindowTitle("GFX Homework: 8.a");
+
 
     //Load the test image.
     if (!load_image("Images/test2.png")) {
         return;
     }
-    bitmap_apply_kernel(&texture_data[5], image_data, gaussian_kernel, 5, 5);
-    bitmap_upload(&texture_data[5], textures[5]);
 
+    bitmap_fill(&texture_data[7], 255, 255, 255);
+    bitmap_upload(&texture_data[7], textures[7]);
+
+    apply_constrast();
     //Add key callback.
     glfwSetKeyCallback(key_handler);
 
@@ -244,7 +231,7 @@ void hw9_init(void)
     print_help();
 }
 
-void hw9_draw(void)
+void hw8_draw(void)
 {
     if (!init_done) {
         return;
@@ -253,7 +240,7 @@ void hw9_draw(void)
     //Draw quads and texture them using our bitmaps.
 
     //The picture.
-    glBindTexture(GL_TEXTURE_2D, textures[4]);
+    glBindTexture(GL_TEXTURE_2D, textures[6]);
     glBegin(GL_QUADS);
     glTexCoord2i(0, 0);
     glVertex3f(0, 0, 0);
@@ -266,7 +253,7 @@ void hw9_draw(void)
     glEnd();
 
     //The histogram.
-    glBindTexture(GL_TEXTURE_2D, textures[5]);
+    glBindTexture(GL_TEXTURE_2D, textures[7]);
     glBegin(GL_QUADS);
     glTexCoord2i(0, 0);
     glVertex3f(TEXTURE_WIDTH + BORDER, 0, 0);
@@ -279,7 +266,7 @@ void hw9_draw(void)
     glEnd();
 }
 
-void hw9_terminate(void)
+void hw8_terminate(void)
 {
     //Remove key handler.
     glfwSetKeyCallback(NULL);
