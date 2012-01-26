@@ -12,7 +12,9 @@
 // [1] = hw_1_image
 // [2] = hw_1_bitmap
 // [3] = hw_6_bitmap
-#define TEXTURE_COUNT 4
+// [4] = hw_9_image
+// [5] = hw_9_bitmap
+#define TEXTURE_COUNT 6
 
 //Holds OpenGL texture IDs
 GLuint textures[TEXTURE_COUNT];

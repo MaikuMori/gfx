@@ -176,7 +176,8 @@ void hw4_init(void)
 
     print_help();
 
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //Test wireframe.
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 }
 
 void hw4_draw(void)
