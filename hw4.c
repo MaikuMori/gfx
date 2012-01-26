@@ -12,7 +12,7 @@
 
 #define OBJ_FACE_COUNT 12
 
-static GLboolean init_done;
+static boolean init_done;
 
 static ShaderProgram * transformation_shader;
 
@@ -60,18 +60,18 @@ static GLuint obj_vao;
 static GLuint obj_vbo;
 static GLuint index_vbo;
 
-static const GLfloat ft_near = 1.0f;
-static const GLfloat ft_far = 1000.0f;
-static const GLfloat fov = 45.0f;
+static const float ft_near = 1.0f;
+static const float ft_far = 1000.0f;
+static const float fov = 45.0f;
 
 static GLuint model_matrix_uniform;
 static GLuint view_matrix_uniform;
 static GLuint pojection_matrix_uniform;
 static GLuint color_uniform;
 
-static GLfloat model_matrix[16];
-static GLfloat view_matrix[16];
-static GLfloat projection_matrix[16];
+static Matrix4f model_matrix;
+static Matrix4f view_matrix;
+static Matrix4f projection_matrix;
 
 static void print_help(void)
 {
@@ -87,6 +87,7 @@ void hw4_init(void)
     float eye[3]    = {0.0f, 0.0f, -5.0f};
     float center[3] = {0.0f, 0.0f, 0.0f};
     float up[3]     = {0.0f, 0.0f, 0.0f};
+
     printf("\nInitializing homework 4 ...\n");
 
     glfwSetWindowTitle("GFX Homework: 4");
@@ -151,20 +152,20 @@ void hw4_init(void)
     glUseProgram(transformation_shader->program);
 
     //Initialize the matrices.
-    memcpy(model_matrix, INDENTITY_4F, sizeof(float) * 16);
-    memcpy(view_matrix, INDENTITY_4F, sizeof(float) * 16);
-    perpective(projection_matrix, fov, TEXTURE_HEIGHT / TEXTURE_WIDTH * 1.0, ft_near, ft_far);
+    memcpy(model_matrix, IDENTITY_4F, sizeof(float) * 16);
+    memcpy(view_matrix, IDENTITY_4F, sizeof(float) * 16);
+    perspective(&projection_matrix, fov, TEXTURE_HEIGHT / TEXTURE_WIDTH * 1.0f, ft_near, ft_far);
 
     //Move the camera back a bit and rotate.
-    translate2(view_matrix, 0, -2.0, -3.0);
-    rotate(view_matrix, -32.0, X_AXIS);
+    translate(&view_matrix, 0, -0.0, -5.0);
+    rotate(&view_matrix, -35.0, Y_AXIS);
     
     //Or use the look_at function.
     //look_at(view_matrix, eye, center, up);
     
     //Upload view and projection matrix data to GPU.
-    glUniformMatrix4fv(view_matrix_uniform, 1, GL_FALSE, view_matrix);
-    glUniformMatrix4fv(pojection_matrix_uniform, 1, GL_FALSE, projection_matrix);
+    glUniformMatrix4fv(view_matrix_uniform, 1, GL_TRUE, (float *) view_matrix);
+    glUniformMatrix4fv(pojection_matrix_uniform, 1, GL_TRUE, (float *) projection_matrix);
 
     //Enable vsync so we can do some simple animation.
     glfwSwapInterval(1);
@@ -174,6 +175,8 @@ void hw4_init(void)
     init_done = GL_TRUE;
 
     print_help();
+
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
 }
 
 void hw4_draw(void)
@@ -194,12 +197,12 @@ void hw4_draw(void)
     glUseProgram(transformation_shader->program);
     
     //Rotate the model a bit.
-    memcpy(model_matrix, INDENTITY_4F, sizeof(float) * 16);
+    memcpy(model_matrix, IDENTITY_4F, sizeof(float) * 16);
     //Different rotation speeds, ~4-8s.
     //TO-DO: There seems to be some rounding error causing very slight twitching.
-    rotate(model_matrix, (360.0f / 60 / 4) * (float) frame_count, Y_AXIS);
-    rotate(model_matrix, (360.0f / 60 / 8) * (float) frame_count, X_AXIS);
-    glUniformMatrix4fv(model_matrix_uniform, 1, GL_FALSE, model_matrix);
+    rotate(&model_matrix, (360.0f / 60 / 4) * (float) frame_count, Y_AXIS);
+    rotate(&model_matrix, (360.0f / 60 / 8) * (float) frame_count, X_AXIS);
+    glUniformMatrix4fv(model_matrix_uniform, 1, GL_TRUE, (float *) model_matrix);
 
     //Draw the object.
     glBindVertexArray(obj_vao);

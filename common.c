@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdio.h>
+#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 #include <windows.h>
@@ -10,6 +11,7 @@
 #include <GL/glext.h>
 
 #include "common.h"
+
 
 char* read_file(char *file)
 {
@@ -272,4 +274,99 @@ void bitmap_draw_circle(GLuint ** data, GLuint x, GLuint y, GLuint radius, GLuby
         bitmap_set_pixel(data, x + cy, y - cx, red, green, blue);
         bitmap_set_pixel(data, x - cy, y - cx, red, green, blue);
     }
+}
+
+void hsv2rgb(GLuint hue, GLuint sat, GLuint val, Color * rgb) {
+
+    double h;
+    double s;
+    double v;
+
+    double r = 0;
+    double g = 0;
+    double b = 0;
+
+    // Scale Hue to be between 0 and 360. Saturation
+    // and value scale to be between 0 and 1.
+    h = (double) hue;
+    s = (double) sat / 100;
+    v = (double) val / 100;
+
+    if (s == 0) {
+        // If s is 0, all colors are the same.
+        // This is some flavor of gray.
+        r = v;
+        g = v;
+        b = v;
+    } else {
+        double p;
+        double q;
+        double t;
+
+        double fractionalSector;
+        int sectorNumber;
+        double sectorPos;
+
+        // The color wheel consists of 6 sectors.
+        // Figure out which sector you're in.
+        sectorPos = h / 60;
+        sectorNumber = (int)(floor(sectorPos));
+
+        // get the fractional part of the sector.
+        // That is, how many degrees into the sector
+        // are you?
+        fractionalSector = sectorPos - sectorNumber;
+
+        // Calculate values for the three axes
+        // of the color. 
+        p = v * (1 - s);
+        q = v * (1 - (s * fractionalSector));
+        t = v * (1 - (s * (1 - fractionalSector)));
+
+        // Assign the fractional colors to r, g, and b
+        // based on the sector the angle is in.
+        switch (sectorNumber) 
+        {
+        case 0:
+            r = v;
+            g = t;
+            b = p;
+            break;
+
+        case 1:
+            r = q;
+            g = v;
+            b = p;
+            break;
+
+        case 2:
+            r = p;
+            g = v;
+            b = t;
+            break;
+
+        case 3:
+            r = p;
+            g = q;
+            b = v;
+            break;
+
+        case 4:
+            r = t;
+            g = p;
+            b = v;
+            break;
+
+        case 5:
+            r = v;
+            g = p;
+            b = q;
+            break;
+        }
+    }
+    
+    //Set final colors in rgb struct.
+    rgb->red = (int) (r * 255);
+    rgb->green = (int) (g * 255);
+    rgb->blue = (int) (b * 255);
 }

@@ -12,6 +12,7 @@
 #include "hw2.h"
 #include "hw3.h"
 #include "hw4.h"
+#include "hw6.h"
 
 //Visual Leak Detector (http://vld.codeplex.com/)
 //Uncomment to compile in Debug if you do not have Visual Leak Detector installed.
@@ -139,6 +140,16 @@ int main(void)
                 hw_init = hw4_init;
                 hw_draw = hw4_draw;
                 hw_terminate = hw4_terminate;
+            } else if (glfwGetKey('6') && hw_id != 6) {
+                if (hw_initialized) {
+                    hw_terminate();
+                    hw_initialized = GL_FALSE;
+                }
+
+                hw_id = 6;
+                hw_init = hw6_init;
+                hw_draw = hw6_draw;
+                hw_terminate = hw6_terminate;
             }
         } else {
             running = GL_FALSE;

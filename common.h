@@ -7,10 +7,12 @@
 //How many texture are we going to use.
 //Not sure if preallocating textures is the best way to go in this case.
 //Doing it on per homework bases could be easier and make more sense.
+//Or could just write simple resource manager.
 // [0] = hw_3_bitmap
 // [1] = hw_1_image
 // [2] = hw_1_bitmap
-#define TEXTURE_COUNT 3
+// [3] = hw_6_bitmap
+#define TEXTURE_COUNT 4
 
 //Holds OpenGL texture IDs
 GLuint textures[TEXTURE_COUNT];
@@ -65,3 +67,5 @@ void bitmap_set_pixel(GLuint ** data, GLuint x, GLuint y, GLubyte red, GLubyte g
 void bitmap_draw_line(GLuint ** data, GLuint x1, GLuint y1, GLuint x2, GLuint y2, GLubyte red, GLubyte green, GLubyte blue);
 //Draw a circle on bitmap with center (x, y).
 void bitmap_draw_circle(GLuint ** data, GLuint x, GLuint y, GLuint radius, GLubyte red, GLubyte green, GLubyte blue);
+//Convert from hsv to rgb.
+void hsv2rgb(GLuint hue, GLuint sat, GLuint val, Color * rgb);
