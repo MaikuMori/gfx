@@ -16,6 +16,7 @@
 #include "hw6.h"
 #include "hw8.h"
 #include "hw9.h"
+#include "hw10.h"
 
 //Visual Leak Detector (http://vld.codeplex.com/)
 //Uncomment to compile in Debug if you do not have Visual Leak Detector installed.
@@ -30,7 +31,7 @@
 static void print_help(void)
 {
     printf("\nHelp:\n");
-    printf(" Use keys to [1-4, 6, 8-9] to switch between homeworks.\n");
+    printf(" Use keys to [1-4, 6, 8-0] to switch between homeworks.\n");
     printf("------\n");
 }
 
@@ -173,6 +174,16 @@ int main(void)
                 hw_init = hw9_init;
                 hw_draw = hw9_draw;
                 hw_terminate = hw9_terminate;
+            } else if (glfwGetKey('0') && hw_id != 10) {
+                if (hw_initialized) {
+                    hw_terminate();
+                    hw_initialized = GL_FALSE;
+                }
+
+                hw_id = 10;
+                hw_init = hw10_init;
+                hw_draw = hw10_draw;
+                hw_terminate = hw10_terminate;
             }
         } else {
             running = GL_FALSE;
